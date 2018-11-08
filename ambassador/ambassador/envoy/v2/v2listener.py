@@ -61,7 +61,7 @@ def v2filter(auth):
                 'server_uri': {
                     'uri': 'http://%s' % auth.auth_service,
                     'cluster': auth.cluster.name,
-                    'timeout': '3s', #'%0.3fs' % (auth.timeout_ms/1000), -> "%0.3fs" % (float(auth.timeout_ms) / 1000.0)
+                    'timeout': "%0.3fs" % (float(auth.timeout_ms) / 1000.0)
                 },
                 'path_prefix': auth.path_prefix,
                 'allowed_authorization_headers': list(AllowedRequestHeaders.union(auth.allowed_headers)),
