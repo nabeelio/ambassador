@@ -27,23 +27,26 @@ from .v2route import V2Route
 if TYPE_CHECKING:
     from . import V2Config
 
-
-ExtAuthRequestHeaders = {
-    'Authorization': True,
-    'Cookie': True,
-    'Forwarded': True,
-    'From': True,
-    'Host': True,
-    'Proxy-Authenticate': True,
-    'Proxy-Authorization': True,
-    'Set-Cookie': True,
-    'User-Agent': True,
-    'X-Forwarded-For': True,
-    'X-Forwarded-Host': True,
+# Static header keys normally used in the context of and authorization request.
+AllowedRequestHeaders = set([
+    'Authorization',
+    'Cookie',
+    'From',
+    'Host',
+    'Proxy-Authorization',
+    'User-Agent',
+    'X-Forwarded-For',
+    'X-Forwarded-Host',
     'X-Forwarded-Proto'
-    'X-Gateway-Proto': True,
-    'WWW-Authenticate': True,
-}
+])
+
+# Static header keys normally used in the context of and authorization response.
+AllowedAuthorizationHeaders = set([
+    'Location',
+    'Proxy-Authenticate',
+    'Set-Cookie',
+    'WWW-Authenticate'
+])
 
 @multi
 def v2filter(irfilter):
@@ -51,11 +54,6 @@ def v2filter(irfilter):
 
 @v2filter.when("IRAuth")
 def v2filter(auth):
-    request_headers = dict(ExtAuthRequestHeaders)
-
-    for hdr in auth.allowed_headers:
-        request_headers[hdr] = True
-
     return {
         'name': 'envoy.ext_authz',
         'config': {
@@ -63,12 +61,11 @@ def v2filter(auth):
                 'server_uri': {
                     'uri': 'http://%s' % auth.auth_service,
                     'cluster': auth.cluster.name,
-                    'timeout': '3s',
+                    'timeout': '3s', #'%0.3fs' % (auth.timeout_ms/1000), -> "%0.3fs" % (float(auth.timeout_ms) / 1000.0)
                 },
                 'path_prefix': auth.path_prefix,
-                'allowed_authorization_headers': auth.allowed_headers,
-                'allowed_request_headers': sorted(request_headers.keys())
-                # 'authorization_headers_to_add': []
+                'allowed_authorization_headers': list(AllowedRequestHeaders.union(auth.allowed_headers)),
+                'allowed_request_headers': list(AllowedAuthorizationHeaders.union(auth.allowed_headers))
             }
         }
     }
