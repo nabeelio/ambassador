@@ -106,6 +106,7 @@ class IRAuth (IRFilter):
 
             self.referenced_by(module)
 
+        self["api_version"] = module.get("apiVersion", None)
         self["timeout_ms"] = module.get("timeout_ms", 5000)
         
         self.__to_header_list('allowed_headers', module)
@@ -118,23 +119,18 @@ class IRAuth (IRFilter):
         if auth_service:
             self.hosts[auth_service] = ( weight, module.get('tls', None), module.location )
 
+    # This method is only used by v1listener.
     def config_dict(self):
         config = {
             "cluster": self.cluster.name
         }
 
-        for key in [ 'allowed_request_headers', 'allowed_authorization_headers', 'allowed_headers', 'path_prefix', 'timeout_ms', 'weight' ]:
+        for key in [ 'allowed_headers', 'path_prefix', 'timeout_ms', 'weight' ]:
             if self.get(key, None):
                 config[key] = self[key]
 
         if self.get('allowed_headers', []):
             config['allowed_headers'] = self.allowed_headers
-        
-        if self.get('allowed_request_headers', []):
-            config['allowed_request_headers'] = self.allowed_request_headers
-
-        if self.get('allowed_authorization_headers', []):
-            config['allowed_authorization_headers'] = self.allowed_authorization_headers
 
         return config
 

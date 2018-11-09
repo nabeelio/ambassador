@@ -54,6 +54,14 @@ def v2filter(irfilter):
 
 @v2filter.when("IRAuth")
 def v2filter(auth):
+    if auth.api_version == "ambassador/v1":
+        allowed_authorizarion_headers = list(AllowedRequestHeaders.union(auth.allowed_authorization_headers)),
+        allowed_request_headers = list(AllowedAuthorizationHeaders.union(auth.allowed_request_headers))
+                
+    if auth.api_version == "ambassador/v0":
+        allowed_authorizarion_headers = list(AllowedRequestHeaders.union(auth.allowed_headers)),
+        allowed_request_headers = list(AllowedAuthorizationHeaders.union(auth.allowed_headers))
+
     return {
         'name': 'envoy.ext_authz',
         'config': {
@@ -64,11 +72,14 @@ def v2filter(auth):
                     'timeout': "%0.3fs" % (float(auth.timeout_ms) / 1000.0)
                 },
                 'path_prefix': auth.path_prefix,
-                'allowed_authorization_headers': list(AllowedRequestHeaders.union(auth.allowed_headers)),
-                'allowed_request_headers': list(AllowedAuthorizationHeaders.union(auth.allowed_headers))
+                'allowed_authorization_headers': allowed_authorizarion_headers,
+                'allowed_request_headers': allowed_request_headers
             }
-        }
-    }
+        }        
+    }    
+
+  
+
 
 
 @v2filter.when("IRRateLimit")
