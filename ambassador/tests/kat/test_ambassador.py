@@ -32,7 +32,6 @@ timeout_ms: 5000
 allowed_request_headers:
 - X-Foo
 - X-Bar
-- Location
 - Requested-Status
 - Requested-Header
 
@@ -49,17 +48,15 @@ prefix: /target/
 service: {self.target.path.k8s}
 """)
 
-
     def queries(self):
         # [0]
         yield Query(self.url("target/"), headers={"Requested-Status": "401", 
                                                   "Baz": "baz",
-                                                  "Request-Header": "Baz"}, expected=401, debug=True)
-        
+                                                  "Request-Header": "Baz"}, expected=401)
         # [1]
         yield Query(self.url("target/"), headers={"Requested-Status": "302",
                                                   "Location": "foo",
-                                                  "Requested-Header": "Location"}, expected=302)
+                                                  "Requested-Header": "Location"}, expected=302, debug=True)
         # [2]
         yield Query(self.url("target/"), headers={"Requested-Status": "401",
                                                   "X-Foo": "foo",
@@ -68,15 +65,11 @@ service: {self.target.path.k8s}
         yield Query(self.url("target/"), headers={"Requested-Status": "401",
                                                   "X-Bar": "bar",
                                                   "Requested-Header": "X-Bar"}, expected=401)
-        
         # [4]
         yield Query(self.url("target/"), headers={"Requested-Status": "200",
                                                   "Authorization": "foo-11111",
                                                   "Requested-Header": "Authorization"}, expected=200)
 
-
-    # TODO(gsagula): Write tests for all UCs which request header headers are overridden, e.g. Authorization. Kat
-    # might need to be enhanced in order to support these use-cases. 
     def check(self):
         # [0] Verifies all request headers sent to the authorization server.
         assert self.results[0].backend.name == self.auth.path.k8s
@@ -124,6 +117,8 @@ service: {self.target.path.k8s}
         assert self.results[4].headers["Server"] == ["envoy"]
         assert self.results[4].headers["Authorization"] == ["foo-11111"]
 
+        # TODO(gsagula): Write tests for all UCs which request header headers 
+        # are overridden, e.g. Authorization.
 
 
 class TLS(AmbassadorTest):

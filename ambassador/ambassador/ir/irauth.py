@@ -23,7 +23,7 @@ class IRAuth (IRFilter):
         super().__init__(
             ir=ir, aconf=aconf, rkey=rkey, kind=kind, name=name,
             cluster="cluster_ext_auth",
-            timeout_ms=None,
+            timeout_ms=5000,
             path_prefix=None,
             allowed_headers=[],
             allowed_request_headers=[],
@@ -106,7 +106,7 @@ class IRAuth (IRFilter):
 
             self.referenced_by(module)
 
-        self["api_version"] = module.get("apiVersion", None)
+        self["api_version"] = module.get("apiVersion", "ambassador/v0")
         self["timeout_ms"] = module.get("timeout_ms", 5000)
         
         self.__to_header_list('allowed_headers', module)
@@ -139,7 +139,7 @@ class IRAuth (IRFilter):
 
         if headers:
             allowed_headers = self.get(list_name, [])
-
+        
             for hdr in headers:
                 if hdr not in allowed_headers:
                     allowed_headers.append(hdr)

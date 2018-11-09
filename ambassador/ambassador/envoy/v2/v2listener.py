@@ -78,10 +78,6 @@ def v2filter(auth):
         }        
     }    
 
-  
-
-
-
 @v2filter.when("IRRateLimit")
 def v2filter(ratelimit):
     config = dict(ratelimit.config)
